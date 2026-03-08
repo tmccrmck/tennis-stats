@@ -62,10 +62,14 @@ def generate_iceman_index():
         "Alex De Minaur", "Nick Kyrgios", "Hubert Hurkacz", "Casper Ruud", "Andrey Rublev"
     ]
     
+    from adjustText import adjust_text
+    texts = []
     for name in notable:
         if name in player_stats.index:
-            plt.annotate(name, (player_stats.loc[name, 'bp_conv_pct'], player_stats.loc[name, 'bp_saved_pct']), 
-                         xytext=(5, 5), textcoords='offset points', fontsize=10, weight='bold')
+            row = player_stats.loc[name]
+            texts.append(plt.text(row['bp_conv_pct'], row['bp_saved_pct'], name, fontsize=9, weight='bold'))
+
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
 
     # Quadrant Labels
     plt.text(player_stats['bp_conv_pct'].max()-2, player_stats['bp_saved_pct'].max()-1, "The Icemen (Clutch)", fontsize=12, weight='bold', color='darkgreen')

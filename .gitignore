@@ -1,5 +1,6 @@
 # Tennis Data
 data/atp_matches_*.csv
+data/charting-m-*.csv
 
 # Model and State Files
 *.joblib

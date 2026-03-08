@@ -42,7 +42,8 @@ def get_player_heights() -> pd.DataFrame:
 
 def plot_pca_map(df: pd.DataFrame, title: str, xlabel: str, ylabel: str, filename: str, 
                  hue_col: Optional[str] = None, targets: List[str] = DEFAULT_TARGETS):
-    """Standardized PCA visualization with annotations."""
+    """Standardized PCA visualization with non-overlapping annotations."""
+    from adjustText import adjust_text
     plt.figure(figsize=(14, 10))
     sns.set_theme(style="white")
     
@@ -52,10 +53,13 @@ def plot_pca_map(df: pd.DataFrame, title: str, xlabel: str, ylabel: str, filenam
         s=100, alpha=0.7, edgecolors='gray'
     )
     
+    texts = []
     for name in targets:
         if name in df.index:
-            plt.annotate(name, (df.loc[name, 'PC1'], df.loc[name, 'PC2']), 
-                         xytext=(5, 5), textcoords='offset points', fontsize=10, weight='bold')
+            row = df.loc[name]
+            texts.append(plt.text(row['PC1'], row['PC2'], name, fontsize=9, weight='bold'))
+
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
 
     plt.title(title, fontsize=20)
     plt.xlabel(xlabel, fontsize=14)

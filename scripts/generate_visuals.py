@@ -6,9 +6,13 @@ import joblib
 from sklearn.calibration import calibration_curve
 import sys
 import os
+
+# Add root to path to import components
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from train_model import TennisDataPipeline, FeatureManager, ScoreParser, MatchPredictor
-from ensemble_predictor import EnsemblePredictor
+from pipeline import TennisDataPipeline
+from features import FeatureManager, ScoreParser
+from prediction import Predictor
+import config
 
 # Set visual style
 sns.set_theme(style="whitegrid")
@@ -16,7 +20,7 @@ sns.set_theme(style="whitegrid")
 def plot_elo_timeseries():
     print("Generating Elo Time Series...")
     pipeline = TennisDataPipeline()
-    years = ['2020', '2021', '2022', '2023', '2024']
+    years = config.YEARS
     dfs = [pd.read_csv(f'data/atp_matches_{y}.csv') for y in years]
     df = pd.concat(dfs).dropna(subset=['winner_name', 'loser_name', 'surface', 'winner_rank', 'loser_rank'])
     df = df.sort_values(['tourney_date', 'match_num']).reset_index(drop=True)
@@ -28,8 +32,7 @@ def plot_elo_timeseries():
     
     for _, row in df.iterrows():
         w, l = row['winner_name'], row['loser_name']
-        ws, ls, wg, lg = ScoreParser.parse(row['score'])
-        fm.update_history(row, ws, ls, wg, lg)
+        fm.update_history(row)
         
         for p in players_to_track:
             if w == p or l == p:
@@ -40,27 +43,28 @@ def plot_elo_timeseries():
     for p in players_to_track:
         plt.plot(dates[p], history[p], label=p, linewidth=2.5)
     
-    plt.title("The Rise of Sinner: Elo Rating Comparison (2021-2024)", fontsize=18)
+    plt.title("The Rise of Sinner: Elo Rating Comparison (2019-2024)", fontsize=18)
     plt.ylabel("Elo Rating", fontsize=14)
     plt.legend(fontsize=12)
-    plt.savefig('elo_timeseries.png')
-    print("Saved elo_timeseries.png")
+    plt.savefig('plots/elo_timeseries.png')
+    print("Saved plots/elo_timeseries.png")
 
 def plot_radar_chart():
     print("Generating Sinner vs. Alcaraz Radar Chart...")
-    state = joblib.load('feature_state.joblib')
+    state = joblib.load(config.STATE_PATH)
     
     players = ["Jannik Sinner", "Carlos Alcaraz"]
-    categories = ['Hard Elo', 'Clay Elo', 'Grass Elo', 'Dom Ratio', 'Set Win %']
+    categories = ['Hard Elo', 'Clay Elo', 'Grass Elo', 'Hold %', 'Break %']
     N = len(categories)
     
     def get_player_data(p):
         hard = state['surf_elo'].get(p, {}).get('Hard', 1500)
         clay = state['surf_elo'].get(p, {}).get('Clay', 1500)
         grass = state['surf_elo'].get(p, {}).get('Grass', 1500)
-        dom = np.mean(state['recent_dominance'].get(p, [1.0]))
-        set_wr = np.mean(state['recent_sets'].get(p, [0.5]))
-        return [hard, clay, grass, dom * 1000, set_wr * 2000] # Scaling for visibility
+        # Hold and Break are now separate
+        hold = np.mean(state.get('recent_hold_pct', {}).get(p, [0.8]))
+        break_pct = np.mean(state.get('recent_break_pct', {}).get(p, [0.2]))
+        return [hard, clay, grass, hold * 2000, break_pct * 8000] # Scaled for visibility
 
     angles = [n / float(N) * 2 * np.pi for n in range(N)]
     angles += angles[:1]
@@ -76,37 +80,40 @@ def plot_radar_chart():
     plt.xticks(angles[:-1], categories, fontsize=12)
     plt.title("Head-to-Head Attributes: Sinner vs Alcaraz", size=20, y=1.1)
     plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
-    plt.savefig('sinner_alcaraz_radar.png')
-    print("Saved sinner_alcaraz_radar.png")
+    plt.savefig('plots/sinner_alcaraz_radar.png')
+    print("Saved plots/sinner_alcaraz_radar.png")
 
 def plot_calibration_curve():
     print("Generating Reliability Diagram (Calibration Curve)...")
-    ensemble = EnsemblePredictor()
+    predictor = Predictor()
     pipeline = TennisDataPipeline()
-    symmetrized_data = pipeline.load_and_process()
+    symmetrized_data = pipeline.run()
     test_data = symmetrized_data[symmetrized_data['tourney_date'] >= 20240101].fillna(symmetrized_data.mean())
     
-    X_test = test_data.drop(['target', 'tourney_date'], axis=1)
+    X_test = test_data[config.FEATURES]
     y_test = test_data['target']
     
-    # Ensemble probabilities
-    xgb_probs = ensemble.xgb_model.predict_proba(X_test)[:, 1]
-    X_test_scaled = ensemble.scaler.transform(X_test)
-    log_probs = ensemble.log_model.predict_proba(X_test_scaled)[:, 1]
-    probs = (xgb_probs * 0.4) + (log_probs * 0.6)
+    # Ensemble probabilities using the common predictor logic
+    probs = []
+    for _, row in X_test.iterrows():
+        # Build raw features from the test row
+        xgb_p = predictor.xgb.predict_proba(pd.DataFrame([row]))[0][1]
+        log_p = predictor.log.predict_proba(pd.DataFrame([row]))[0][1]
+        nn_p = predictor.nn.predict_proba(pd.DataFrame([row]))[0][1]
+        probs.append((xgb_p * 0.25) + (log_p * 0.50) + (nn_p * 0.25))
     
     prob_true, prob_pred = calibration_curve(y_test, probs, n_bins=10)
     
     plt.figure(figsize=(10, 10))
     plt.plot([0, 1], [0, 1], "k:", label="Perfectly Calibrated")
-    plt.plot(prob_pred, prob_true, "s-", label="Ensemble Predictor")
+    plt.plot(prob_pred, prob_true, "s-", label="Weighted Ensemble")
     
     plt.xlabel("Mean Predicted Probability", fontsize=14)
     plt.ylabel("Fraction of Positives", fontsize=14)
-    plt.title("Reliability Diagram: Predictor Calibration", fontsize=18)
+    plt.title("Reliability Diagram: Weighted Predictor Calibration", fontsize=18)
     plt.legend(loc="lower right")
-    plt.savefig('calibration_curve.png')
-    print("Saved calibration_curve.png")
+    plt.savefig('plots/calibration_curve.png')
+    print("Saved plots/calibration_curve.png")
 
 if __name__ == "__main__":
     plot_elo_timeseries()

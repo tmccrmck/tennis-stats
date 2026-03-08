@@ -70,13 +70,18 @@ def generate_detailed_height_analysis():
     ax2.set_ylabel('Unforced Errors per 100 Points')
     
     # Annotate Top Players
+    from adjustText import adjust_text
+    texts1 = []
+    texts2 = []
     notable = ["Jannik Sinner", "Carlos Alcaraz", "Novak Djokovic", "Daniil Medvedev", "Alexander Zverev", "Taylor Fritz", "Alex De Minaur"]
     for name in notable:
         if name in player_analysis.index:
-            ax1.annotate(name, (player_analysis.loc[name, 'ht'], player_analysis.loc[name, 'winner_rate']), 
-                         xytext=(5, 5), textcoords='offset points', fontsize=9)
-            ax2.annotate(name, (player_analysis.loc[name, 'ht'], player_analysis.loc[name, 'error_rate']), 
-                         xytext=(5, 5), textcoords='offset points', fontsize=9)
+            row = player_analysis.loc[name]
+            texts1.append(ax1.text(row['ht'], row['winner_rate'], name, fontsize=9, weight='bold'))
+            texts2.append(ax2.text(row['ht'], row['error_rate'], name, fontsize=9, weight='bold'))
+
+    adjust_text(texts1, ax=ax1, arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
+    adjust_text(texts2, ax=ax2, arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.savefig('plots/detailed_height_analysis.png')

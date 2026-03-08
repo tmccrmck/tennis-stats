@@ -70,11 +70,14 @@ def generate_rally_height_analysis():
                "Alexander Zverev", "Taylor Fritz", "Alex De Minaur", "Diego Schwartzman", 
                "John Isner", "Reilly Opelka"]
     
+    from adjustText import adjust_text
+    texts = []
     for name in notable:
         if name in stats['name'].values:
             row = stats[stats['name'] == name].iloc[0]
-            plt.annotate(name, (row['ht'], row['rally_impact']), 
-                         xytext=(5, 5), textcoords='offset points', fontsize=10, weight='bold')
+            texts.append(plt.text(row['ht'], row['rally_impact'], name, fontsize=9, weight='bold'))
+
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
 
     plt.title("Rally Length Resilience: Win % Delta (10+ shots vs 1-3 shots) by Height", fontsize=18)
     plt.xlabel("Player Height (cm)", fontsize=14)
