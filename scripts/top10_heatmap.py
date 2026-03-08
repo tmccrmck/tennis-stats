@@ -5,16 +5,18 @@ import matplotlib.pyplot as plt
 import joblib
 import sys
 import os
+
+# Add root to path to import components
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ensemble_predictor import EnsemblePredictor
+from prediction import Predictor
+import config
 
 def generate_top10_heatmap(surface="Hard", level="G"):
-    logging = joblib.load('feature_state.joblib')
-    predictor = EnsemblePredictor()
+    predictor = Predictor()
     
     # 1. Get Top 10 players
     players = []
-    for name, stats in logging['player_stats'].items():
+    for name, stats in predictor.state['player_stats'].items():
         players.append({'name': name, 'rank': stats['rank']})
     
     top_10 = pd.DataFrame(players).sort_values('rank').head(10)['name'].tolist()
@@ -24,17 +26,12 @@ def generate_top10_heatmap(surface="Hard", level="G"):
     matrix = np.zeros((n, n))
     
     print(f"Calculating {n*n} matchups for {surface} surface...")
-    
     for i in range(n):
         for j in range(n):
             if i == j:
-                matrix[i, j] = 0.5 # Neutral
+                matrix[i, j] = 0.5
                 continue
-            
-            p1, p2 = top_10[i], top_10[j]
-            # Use ensemble prediction (weighted avg of XGB and Logistic)
-            prob = predictor.predict_match(p1, p2, surface, level)
-            matrix[i, j] = prob
+            matrix[i, j] = predictor.predict(top_10[i], top_10[j], surface, level)
             
     # 3. Plot Heatmap
     plt.figure(figsize=(12, 10))
@@ -46,7 +43,7 @@ def generate_top10_heatmap(surface="Hard", level="G"):
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     plt.savefig('plots/top10_heatmap.png')
-    print("\nHeatmap saved to plots/top10_heatmap.png")
+    print(f"\nHeatmap saved to plots/top10_heatmap.png")
 
 if __name__ == "__main__":
     generate_top10_heatmap()

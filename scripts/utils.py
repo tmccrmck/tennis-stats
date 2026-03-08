@@ -7,22 +7,32 @@ YEARS = ['2020', '2021', '2022', '2023', '2024']
 DATA_DIR = 'data/'
 PLOTS_DIR = 'plots/'
 
-def load_data(years=YEARS):
+from typing import List, Dict, Optional
+import pandas as pd
+import numpy as np
+import os
+
+# Constants
+YEARS: List[str] = ['2020', '2021', '2022', '2023', '2024']
+DATA_DIR: str = 'data/'
+PLOTS_DIR: str = 'plots/'
+
+def load_data(years: List[str] = YEARS) -> pd.DataFrame:
     """Loads and concatenates match data for specified years."""
-    dfs = []
+    dfs: List[pd.DataFrame] = []
     for y in years:
-        path = os.path.join(DATA_DIR, f'atp_matches_{y}.csv')
+        path: str = os.path.join(DATA_DIR, f'atp_matches_{y}.csv')
         if os.path.exists(path):
             dfs.append(pd.read_csv(path))
     return pd.concat(dfs).reset_index(drop=True)
 
-def get_consolidated_player_df(df):
+def get_consolidated_player_df(df: pd.DataFrame) -> pd.DataFrame:
     """
     Consolidates winner and loser data into a single DataFrame where each row 
     is a player's performance in a match.
     """
     # Columns to extract for the "primary" player and the "opponent"
-    w_cols = {
+    w_cols: Dict[str, str] = {
         'name': 'winner_name', 'ht': 'winner_ht', 'age': 'winner_age',
         'ace': 'w_ace', 'df': 'w_df', 'svpt': 'w_svpt', '1stIn': 'w_1stIn',
         '1stWon': 'w_1stWon', '2ndWon': 'w_2ndWon', 'SvGms': 'w_SvGms',
@@ -31,7 +41,7 @@ def get_consolidated_player_df(df):
         'opp_SvGms': 'l_SvGms', 'opp_bpSaved': 'l_bpSaved', 'opp_bpFaced': 'l_bpFaced'
     }
     
-    l_cols = {
+    l_cols: Dict[str, str] = {
         'name': 'loser_name', 'ht': 'loser_ht', 'age': 'loser_age',
         'ace': 'l_ace', 'df': 'l_df', 'svpt': 'l_svpt', '1stIn': 'l_1stIn',
         '1stWon': 'l_1stWon', '2ndWon': 'l_2ndWon', 'SvGms': 'l_SvGms',
@@ -41,12 +51,12 @@ def get_consolidated_player_df(df):
     }
     
     # Extract and rename
-    winners = df[list(w_cols.values())].rename(columns={v: k for k, v in w_cols.items()})
+    winners: pd.DataFrame = df[list(w_cols.values())].rename(columns={v: k for k, v in w_cols.items()})
     winners['win'] = 1
     
-    losers = df[list(l_cols.values())].rename(columns={v: k for k, v in l_cols.items()})
+    losers: pd.DataFrame = df[list(l_cols.values())].rename(columns={v: k for k, v in l_cols.items()})
     losers['win'] = 0
     
     # Combine
-    combined = pd.concat([winners, losers]).dropna(subset=['ht', 'svpt', 'opp_svpt'])
+    combined: pd.DataFrame = pd.concat([winners, losers]).dropna(subset=['ht', 'svpt', 'opp_svpt'])
     return combined[combined['svpt'] > 0]
