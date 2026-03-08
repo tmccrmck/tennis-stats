@@ -1,0 +1,13 @@
+# Tennis Data
+data/atp_matches_*.csv
+
+# Model and State Files
+*.joblib
+
+# Generated Visualizations
+plots/*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
