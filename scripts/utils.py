@@ -73,7 +73,8 @@ def plot_pca_map(df: pd.DataFrame, title: str, xlabel: str, ylabel: str, filenam
 def get_consolidated_player_df(df: pd.DataFrame) -> pd.DataFrame:
     """Consolidates winner and loser data."""
     w_cols = {
-        'name': 'winner_name', 'ht': 'winner_ht', 'age': 'winner_age',
+        'name': 'winner_name', 'ht': 'winner_ht', 'age': 'winner_age', 'hand': 'winner_hand',
+        'surface': 'surface',
         'ace': 'w_ace', 'df': 'w_df', 'svpt': 'w_svpt', '1stIn': 'w_1stIn',
         '1stWon': 'w_1stWon', '2ndWon': 'w_2ndWon', 'SvGms': 'w_SvGms',
         'bpSaved': 'w_bpSaved', 'bpFaced': 'w_bpFaced',
@@ -81,7 +82,8 @@ def get_consolidated_player_df(df: pd.DataFrame) -> pd.DataFrame:
         'opp_SvGms': 'l_SvGms', 'opp_bpSaved': 'l_bpSaved', 'opp_bpFaced': 'l_bpFaced'
     }
     l_cols = {
-        'name': 'loser_name', 'ht': 'loser_ht', 'age': 'loser_age',
+        'name': 'loser_name', 'ht': 'loser_ht', 'age': 'loser_age', 'hand': 'loser_hand',
+        'surface': 'surface',
         'ace': 'l_ace', 'df': 'l_df', 'svpt': 'l_svpt', '1stIn': 'l_1stIn',
         '1stWon': 'l_1stWon', '2ndWon': 'l_2ndWon', 'SvGms': 'l_SvGms',
         'bpSaved': 'l_bpSaved', 'bpFaced': 'l_bpFaced',

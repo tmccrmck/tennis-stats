@@ -1,7 +1,7 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 import sys
 import os
 
@@ -9,51 +9,61 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scripts.utils import load_data, get_consolidated_player_df
 
-def run_analysis():
-    # 1. Load and Consolidate
+def generate_handedness_height_serve():
+    print("Analyzing Height vs. Serve Efficiency by Handedness...")
     df = load_data()
-    all_matches = get_consolidated_player_df(df)
-
-    # 2. Aggregate by player
-    player_stats = all_matches.groupby('name').agg({
+    pm_df = get_consolidated_player_df(df)
+    
+    # Filter for known handedness and significant match volume
+    pm_df = pm_df[pm_df['hand'].isin(['R', 'L'])]
+    
+    # Calculate player career stats
+    player_stats = pm_df.groupby(['name', 'hand']).agg({
         'ht': 'first',
-        'ace': 'mean',
-        'df': 'mean',
+        'ace': 'sum',
         'svpt': 'sum',
-        '1stIn': 'sum',
-        '1stWon': 'sum',
-        '2ndWon': 'sum',
-        'name': 'count'
-    }).rename(columns={'name': 'match_count'})
-
-    # Filter for significant sample size
-    player_stats = player_stats[player_stats['match_count'] >= 5]
-
-    # Calculate percentages
-    player_stats['first_serve_win_pct'] = (player_stats['1stWon'] / player_stats['1stIn']) * 100
-    player_stats['service_points_won_pct'] = ((player_stats['1stWon'] + player_stats['2ndWon']) / player_stats['svpt']) * 100
-
-    # 3. Plot
+        'win': 'count'
+    }).reset_index()
+    
+    player_stats = player_stats[player_stats['win'] >= 30]
+    player_stats['ace_rate'] = (player_stats['ace'] / player_stats['svpt']) * 100
+    
+    # Visualization
+    plt.figure(figsize=(14, 10))
     sns.set_theme(style="whitegrid")
-    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-    fig.suptitle('ATP 2020-2024: Serve Stats vs Player Height (Min 5 matches)', fontsize=20)
+    
+    # Scatter plot with regression lines per hand
+    scatter = sns.lmplot(
+        data=player_stats, x='ht', y='ace_rate', hue='hand',
+        palette={'R': '#1f77b4', 'L': '#ff7f0e'},
+        height=8, aspect=1.5,
+        scatter_kws={'alpha': 0.5, 's': 80},
+        line_kws={'linewidth': 3}
+    )
+    
+    plt.title("The 'Southpaw Leverage': Ace Rate vs. Height by Handedness (2019-2024)", fontsize=20)
+    plt.xlabel("Player Height (cm)", fontsize=14)
+    plt.ylabel("Aces per 100 Service Points", fontsize=14)
+    
+    # Annotate significant players
+    from adjustText import adjust_text
+    ax = plt.gca()
+    texts = []
+    
+    notable = ["John Isner", "Reilly Opelka", "Nick Kyrgios", "Hubert Hurkacz", 
+               "Ben Shelton", "Denis Shapovalov", "Cameron Norrie", "Rafael Nadal",
+               "Novak Djokovic", "Jannik Sinner", "Carlos Alcaraz", "Daniil Medvedev"]
+    
+    for name in notable:
+        if name in player_stats['name'].values:
+            row = player_stats[player_stats['name'] == name].iloc[0]
+            texts.append(ax.text(row['ht'], row['ace_rate'], name, fontsize=10, weight='bold'))
 
-    plots = [
-        (axes[0, 0], 'ace', 'Avg Aces per Match', 'Avg Aces', 'blue'),
-        (axes[0, 1], 'first_serve_win_pct', '1st Serve Win %', '1st Serve Win %', 'green'),
-        (axes[1, 0], 'df', 'Avg Double Faults per Match', 'Avg Double Faults', 'purple'),
-        (axes[1, 1], 'service_points_won_pct', 'Total Service Points Won %', 'Service Points Won %', 'orange')
-    ]
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
 
-    for ax, col, title, ylabel, color in plots:
-        sns.regplot(ax=ax, data=player_stats, x='ht', y=col, scatter_kws={'alpha':0.5, 'color':color}, line_kws={'color':'red'})
-        ax.set_title(title)
-        ax.set_xlabel('Height (cm)')
-        ax.set_ylabel(ylabel)
-
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    plt.savefig('plots/height_vs_serve_stats.png')
-    print("Visualization saved to plots/height_vs_serve_stats.png")
+    plt.tight_layout()
+    plt.savefig('plots/height_vs_serve_by_hand.png')
+    print("Plot saved to plots/height_vs_serve_by_hand.png")
 
 if __name__ == "__main__":
-    run_analysis()
+    generate_handedness_height_serve()

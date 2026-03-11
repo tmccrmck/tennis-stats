@@ -66,11 +66,32 @@ Finally, we looked at the "Risk/Reward" profile of height using point-by-point w
 
 ![Detailed Height Analysis](plots/detailed_height_analysis.png)
 
-Taller players hit significantly more winners per 100 points, but they also commit more unforced errors. The "Perfect Physique" is found in players who can maximize that winner rate without the error rate "climbing the cliff." 
+Taller players hit significantly more winners per 100 points, but they also commit more unforced errors. The "Perfect Physique" is found in players who can maximize that winner rate without the error rate "climbing the cliff."
 
 ---
 
-## Conclusion: The New Archetype
+## 5. The Mobility Cliff: Quantifying the Scramble
+Beyond the technical "Return Penalty," there is a raw physical limit to height: **Movement Efficiency**. By combining data on defensive scrambling (forced errors induced) and long-rally endurance, we mapped the "Mobility Cliff" of the ATP tour.
+
+![Movement vs Height](plots/movement_vs_height.png)
+
+The downward diagonal is relentless. As height increases, the physical ability to "scramble" and win long points drops off. This is why players like **Alex De Minaur** and **Sebastian Baez** can remain elite despite lacking a 220km/h serve—they are at the absolute peak of the mobility index.
+
+The 190cm-193cm "Sweet Spot" is the highest point on the height spectrum where a player can still maintain a "World Class" movement score.
+
+---
+
+## 6. The Lefty Multiplier
+While height is the primary engine of service power, handedness acts as a significant "multiplier." We analyzed Ace Rates by height, broken down by lefties and righties.
+
+![Height vs Serve by Hand](plots/height_vs_serve_by_hand.png)
+
+The data shows that for any given height, a **Left-Handed player** typically earns a statistically significant "Ace Boost" over their right-handed peers. A 193cm lefty like **Ben Shelton** generates more service pressure than a right-handed player of the same height, effectively "simulating" the serve power of a 200cm giant while keeping the mobility of a 193cm athlete.
+
+---
+
+## Conclusion: Two Paths to the Throne
+
 The data is clear: the most successful tennis player in the world right now isn't the tallest or the fastest—it's the one who perfectly balances the two. 
 
 The current world #1, **Jannik Sinner (192cm)**, represents the perfection of this archetype. He possesses the height of a dominant server but the statistical "DNA" of a 180cm return specialist.
