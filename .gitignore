@@ -5,9 +5,6 @@ data/charting-m-*.csv
 # Model and State Files
 *.joblib
 
-# Generated Visualizations
-plots/*.png
-
 # Python
 __pycache__/
 *.py[cod]

@@ -61,6 +61,6 @@ NN_PARAMS = {
     'solver': 'adam',
     'alpha': 0.001, # L2 penalty
     'learning_rate_init': 0.001,
-    'max_iter': 1000,
+    'max_iter': 20,
     'random_state': 42
 }
