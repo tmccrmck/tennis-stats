@@ -82,6 +82,17 @@ While Sinner represents the peak of the 190cm "Sweet Spot," **Carlos Alcaraz (18
 
 Alcaraz defies the height-winrate curve through **explosive acceleration**. While traditional players his height are often limited to "Scrambler" roles, Alcaraz uses his incredible foot speed to turn defensive positions into offensive winners. He represents a different solution to the physics of tennis: if you can't reach the ball with height, reach it with pure speed—and hit it harder than anyone else when you get there.
 
+### Model Interrogation: Simulating the Physical Limits
+To validate our theories, we "interrogated" our calibrated machine learning ensemble. We simulated a matchup between two identical players, varying only the height of one player across different surfaces to see what the model has "learned" about tennis physics.
+
+![Height Win Simulation](plots/height_win_simulation.png)
+
+The model’s win probability curves confirm our historical findings with remarkable precision:
+- **The Surface Factor**: The "Height Boost" is most pronounced on **Grass**, where the advantage of a high-contact-point serve is maximized. On **Clay**, the curve is significantly flatter, reflecting the model's understanding that height is less of a weapon when movement and rally tolerance are the primary deciders.
+- **The Turning Point**: Across all surfaces, the model identifies a peak in the **190cm-195cm** range. Crucially, it shows a **downward turn** after 205cm, proving that the algorithm has autonomously discovered the point where height becomes a physical tax on match endurance and mobility.
+
+This bridges the gap between raw data and predictive intelligence—the model has effectively "reverse-engineered" the physical constraints of the ATP tour.
+
 ---
 
 ## Conclusion: Two Paths to the Throne
